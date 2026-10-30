@@ -10,6 +10,8 @@
   },
   "scripts": {
     "dev": "node --watch src/server.js",
+    "dev:local": "node --watch scripts/dev-local.js",
+    "send-sample": "node scripts/send-sample.js",
     "start": "node src/server.js",
     "test": "node --test --test-concurrency=1 \"tests/**/*.test.js\"",
     "migrate": "node scripts/migrate.js",

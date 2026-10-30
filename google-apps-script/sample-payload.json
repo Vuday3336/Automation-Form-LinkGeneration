@@ -1,0 +1,17 @@
+{
+  "source": "google_form",
+  "sourceResponseId": "sample-response-0001",
+  "formId": "sample-form",
+  "formTitle": "Hospital Operations Request (Demo)",
+  "submittedAt": "2026-10-30T09:15:00.000Z",
+  "respondentEmail": null,
+  "answers": [
+    { "question": "Hospital Name", "answer": "Demo City General Hospital" },
+    { "question": "Department", "answer": "Radiology" },
+    { "question": "Submission Type", "answer": "Equipment Request" },
+    { "question": "Patient Name", "answer": "Test Patient Foxtrot" },
+    { "question": "Priority", "answer": "High" },
+    { "question": "Request Details", "answer": "Dummy request: replacement lead apron for X-ray room 2. Test data only." },
+    { "question": "Items Needed", "answer": "Lead apron, Thyroid shield" }
+  ]
+}

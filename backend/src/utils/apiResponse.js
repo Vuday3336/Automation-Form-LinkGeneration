@@ -35,4 +35,9 @@ export class ApiError extends Error {
   static conflict(message = 'Resource already exists') {
     return new ApiError(409, message);
   }
+
+  // 410 Gone: the thing existed but is no longer available (expired or revoked link).
+  static gone(message = 'This resource is no longer available') {
+    return new ApiError(410, message);
+  }
 }

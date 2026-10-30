@@ -2,44 +2,70 @@
 
 Google Form submissions → secure, access-controlled hospital dashboard.
 
-- Architecture & phase plan: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- Phase notes (what was built, how it works, how to test): [docs/phases/](docs/phases/)
+Every form response is sent by Google Apps Script to an Express API. The API validates it, ignores
+duplicates, encrypts patient fields, stores it in Supabase (PostgreSQL) and creates an expiring
+secure link. Staff log in to a React dashboard and see only their own hospitals' submissions.
 
 > **Development uses dummy data only.** Never enter real patient information.
+
+| Doc | What's in it |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System diagram, design decisions, phase plan |
+| [docs/phases/PHASE-1.md](docs/phases/PHASE-1.md) | Project setup, security middleware, glossary |
+| [docs/phases/PHASE-2.md](docs/phases/PHASE-2.md) | Supabase, tables, encryption, migrations |
+| [docs/phases/PHASE-3-TO-7.md](docs/phases/PHASE-3-TO-7.md) | APIs, secure links, roles, dashboard, testing |
+| [google-apps-script/README.md](google-apps-script/README.md) | Connecting a real Google Form |
 
 ## Requirements
 
 - Node.js 20+ (built and tested on Node 24)
-- npm
-- A Supabase project (from Phase 2; automated tests use an in-memory Postgres instead)
+- A Supabase project (optional for local development: see `dev:local` below)
 
 ## First-time setup
 
 ```bash
 cd backend
 npm install
-copy .env.example .env      # macOS/Linux: cp .env.example .env
-npm run secret              # run 3 times: one value each for JWT_SECRET, INTEGRATION_SECRET, FIELD_ENCRYPTION_KEY
-# also fill in DATABASE_URL (Supabase) and SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD, then:
-npm run migrate             # creates the tables in Supabase
-npm run seed                # adds demo hospitals + your Super Admin
-cd ../frontend
+```
+```bash
+cd frontend
 npm install
+```
+
+`backend/.env` holds all settings (copy `backend/.env.example` if it doesn't exist; generate each
+secret with `npm run secret`). To use Supabase, set `DATABASE_URL` to your project's **Session pooler**
+connection string (Supabase → Connect → Session pooler), then:
+
+```bash
+cd backend
+npm run migrate
+```
+```bash
+cd backend
+npm run seed
 ```
 
 ## Running locally (two terminals)
 
+Backend, either on Supabase:
 ```bash
-# Terminal 1: API on http://localhost:5000
 cd backend
 npm run dev
 ```
-
+or fully offline on a local Postgres with demo data (no Supabase needed):
 ```bash
-# Terminal 2: UI on http://localhost:5173
+cd backend
+npm run dev:local
+```
+
+Frontend (http://localhost:5173):
+```bash
 cd frontend
 npm run dev
 ```
+
+Log in as `admin@hospitalform.test` with `SEED_ADMIN_PASSWORD` from `backend/.env`.
+Demo accounts for each role are listed in [PHASE-3-TO-7.md](docs/phases/PHASE-3-TO-7.md#demo-accounts-dummy-data).
 
 ## Tests
 
@@ -52,7 +78,9 @@ npm test
 
 | Folder | What lives there |
 |---|---|
-| `backend/` | Express REST API (Node.js) |
+| `backend/` | Express REST API: routes → middleware → controllers → services → models |
+| `backend/db/migrations/` | SQL that creates the database tables |
 | `frontend/` | React + Vite + Tailwind dashboard |
-| `google-apps-script/` | Code you paste into the Google Sheet's Apps Script editor (Phase 4) |
-| `docs/` | Architecture, phase notes, glossary |
+| `google-apps-script/` | Code you paste into the Google Sheet's Apps Script editor |
+| `postman/` | Postman collection with every endpoint |
+| `docs/` | Architecture and phase-by-phase explanations |

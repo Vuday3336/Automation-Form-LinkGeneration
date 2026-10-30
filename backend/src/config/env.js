@@ -27,6 +27,9 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().default('http://localhost:5173'),
   LINK_BASE_URL: z.string().url().default('http://localhost:5173'),
   LINK_TTL_HOURS: z.coerce.number().positive().default(72),
+  // Public HTTPS address of this API (e.g. your tunnel or deployed URL). Shown on the
+  // Integration Settings page so you know what to paste into Apps Script.
+  PUBLIC_API_URL: z.string().default(''),
 });
 
 const parsed = envSchema.safeParse(process.env);

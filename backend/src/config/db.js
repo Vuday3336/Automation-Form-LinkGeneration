@@ -59,6 +59,15 @@ export async function connectDatabase() {
     throw new Error('DATABASE_URL is not set. Add your Supabase connection string to backend/.env');
   }
 
+  // "pglite:<folder>" = local Postgres stored in a folder (npm run dev:local). Development only.
+  if (env.DATABASE_URL.startsWith('pglite:')) {
+    if (env.isProduction) throw new Error('The local PGlite database cannot be used in production');
+    const { createPgliteDriver } = await import('./pgliteDriver.js');
+    driver = await createPgliteDriver(env.DATABASE_URL.slice('pglite:'.length));
+    logger.info('Connected to LOCAL PGlite database (not Supabase)');
+    return driver;
+  }
+
   const pool = new pg.Pool({
     connectionString: env.DATABASE_URL,
     ssl: sslOptions(),

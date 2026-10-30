@@ -3,6 +3,8 @@
 /* Design tokens: the app's brand colors and font, usable as Tailwind classes (e.g. bg-brand-600). */
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --color-brand-800: #115e59;
   --color-brand-50: #f0fdfa;
   --color-brand-100: #ccfbf1;
   --color-brand-500: #14b8a6;

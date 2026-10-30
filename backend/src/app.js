@@ -8,6 +8,11 @@ import { env } from './config/env.js';
 import { isDatabaseHealthy } from './config/db.js';
 import { sendSuccess } from './utils/apiResponse.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+import authRoutes from './routes/authRoutes.js';
+import submissionRoutes from './routes/submissionRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import integrationRoutes from './routes/integrationRoutes.js';
+import { hospitalRoutes, userRoutes, auditRoutes } from './routes/adminRoutes.js';
 
 // Builds and returns the Express app WITHOUT starting a network listener.
 // Keeping this separate from server.js lets tests import the app directly.
@@ -40,7 +45,7 @@ export function createApp() {
     '/api',
     rateLimit({
       windowMs: 15 * 60 * 1000,
-      limit: 300,
+      limit: env.isTest ? 10_000 : 600,
       standardHeaders: 'draft-7',
       legacyHeaders: false,
       message: { success: false, message: 'Too many requests, please try again later' },
@@ -67,7 +72,14 @@ export function createApp() {
     });
   });
 
-  // Feature routes (auth, submissions, dashboard, integrations) are mounted here in later phases.
+  // Feature routes
+  app.use('/api/auth', authRoutes);
+  app.use('/api/submissions', submissionRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
+  app.use('/api/integrations', integrationRoutes);
+  app.use('/api/hospitals', hospitalRoutes);
+  app.use('/api/users', userRoutes);
+  app.use('/api/audit-logs', auditRoutes);
 
   // 5. Anything that didn't match a route → 404, then the central error handler.
   app.use(notFound);

@@ -98,6 +98,9 @@ D:\AI Agent
 
 ## 4. Phase plan
 
+Status: Phases 1–7 are built and tested (55 automated tests). Phase 8 (connecting a real Google Form)
+needs your Google account and a public URL; Phases 9–10 come next.
+
 | Phase | Deliverable | How you verify it |
 |---|---|---|
 | **1** Setup | Folders, packages, env validation, Express skeleton with security middleware, health endpoint, React+Tailwind shell that calls the backend | `npm test`, open `http://localhost:5173`, which shows "Backend: online" |
