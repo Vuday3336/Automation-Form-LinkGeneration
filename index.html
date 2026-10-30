@@ -49,6 +49,9 @@
     const SUPABASE_URL = 'https://xpeanpkcggyzssienxwr.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_WRgqwQbpJsE9yjoEYmwJWg_7lDECSe8';
 
+    // Sheet columns used for bookkeeping, not form answers: don't show them.
+    const HIDDEN_COLUMNS = new Set(['Link', 'Submission ID', 'Generated Link', 'Processing Status']);
+
     const card = document.getElementById('card');
     const showState = (text, isError) => {
       card.innerHTML = '';
@@ -71,14 +74,14 @@
       if (!token || !/^[a-f0-9]{64}$/.test(token)) return showState('This link is missing or invalid.', true);
 
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_submission`, {
-          method: 'POST',
-          headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ p_token: token }),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        // A plain GET with the key in the URL: no custom headers, so the browser sends it directly
+        // (no CORS pre-check request), which works behind more proxies and browser extensions.
+        const url = `${SUPABASE_URL}/rest/v1/rpc/get_submission?p_token=${token}&apikey=${SUPABASE_KEY}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`server returned HTTP ${res.status}`);
         const data = await res.json();
         if (!data) return showState('No submission found for this link.', true);
+        data.answers = data.answers.filter(({ question }) => !HIDDEN_COLUMNS.has(question));
 
         card.innerHTML = '';
         const head = el('div', 'head');
@@ -96,7 +99,9 @@
         card.append(head, list);
         document.title = data.form_title || 'Form Submission';
       } catch (err) {
-        showState('Could not load this submission. Please try again.', true);
+        // Show the reason so problems can be diagnosed ("Failed to fetch" = the request was blocked
+        // before reaching Supabase: a browser extension, firewall or network filter).
+        showState(`Could not load this submission (${err.message}). Try reloading, or open the link in an incognito window.`, true);
       }
     }
 
