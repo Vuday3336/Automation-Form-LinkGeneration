@@ -19,8 +19,10 @@ export async function receiveGoogleFormSubmission(req, res) {
 
 // Integration Settings page: shows how Apps Script should be configured. Never returns the secret.
 export async function integrationInfo(req, res) {
-  const recent = await listAuditLogs({ action: 'submission.received', page: 1, limit: 5 });
-  const rejected = await listAuditLogs({ action: 'integration.rejected', page: 1, limit: 5 });
+  const [recent, rejected] = await Promise.all([
+    listAuditLogs({ action: 'submission.received', page: 1, limit: 5 }),
+    listAuditLogs({ action: 'integration.rejected', page: 1, limit: 5 }),
+  ]);
   const apiBase = env.PUBLIC_API_URL || `${req.protocol}://${req.get('host')}`;
   sendSuccess(res, {
     data: {

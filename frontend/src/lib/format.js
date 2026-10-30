@@ -24,7 +24,11 @@ export function timeAgo(value) {
 // Form answers can be text, numbers, lists (checkboxes) or lists of lists (grids).
 export function formatAnswer(answer) {
   if (answer === null || answer === undefined || answer === '') return '—';
-  if (Array.isArray(answer)) return answer.map((a) => (Array.isArray(a) ? a.join(', ') : a)).join('; ');
+  if (Array.isArray(answer)) {
+    // Grid answers are lists of rows ("; " between rows); checkbox answers are a flat list.
+    const isGrid = answer.some(Array.isArray);
+    return answer.map((a) => (Array.isArray(a) ? a.join(', ') : a)).join(isGrid ? '; ' : ', ');
+  }
   return String(answer);
 }
 

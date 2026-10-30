@@ -10,7 +10,8 @@ export const ROLES = Object.freeze({
 // Selects a user plus the list of hospital IDs they may access, as one row.
 const SELECT_USER = `
   select u.id, u.name, u.email, u.password_hash, u.role, u.is_active, u.created_at, u.updated_at,
-         coalesce(array_agg(a.hospital_id) filter (where a.hospital_id is not null), '{}') as hospital_access
+         -- ::text so every driver returns a real JS array (node-postgres doesn't parse uuid[]).
+         coalesce(array_agg(a.hospital_id::text) filter (where a.hospital_id is not null), '{}') as hospital_access
   from users u
   left join user_hospital_access a on a.user_id = u.id`;
 
