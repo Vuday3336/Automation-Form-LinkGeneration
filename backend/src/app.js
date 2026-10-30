@@ -19,8 +19,9 @@ import { hospitalRoutes, userRoutes, auditRoutes } from './routes/adminRoutes.js
 export function createApp() {
   const app = express();
 
-  // If deployed behind a proxy (Render, Railway, Nginx), trust it so rate limiting sees real client IPs.
-  if (env.isProduction) app.set('trust proxy', 1);
+  // Behind a proxy, trust it so rate limiting sees real client IPs instead of the proxy's.
+  // Production: one hop (Render, Railway, Nginx). Development: only a local tunnel (cloudflared/ngrok on this machine).
+  app.set('trust proxy', env.isProduction ? 1 : 'loopback');
   app.disable('x-powered-by');
 
   // 1. Security headers (Content-Security-Policy, X-Frame-Options, HSTS, ...).
