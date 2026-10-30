@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Form Submission</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4f6f8; --card: #ffffff; --text: #0f172a; --muted: #64748b;
+      --line: #e2e8f0; --brand: #0d9488; --brand-soft: #ccfbf1; --error: #b91c1c;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0b1120; --card: #111827; --text: #e2e8f0; --muted: #94a3b8; --line: #1f2937; --brand: #2dd4bf; --brand-soft: #134e4a; --error: #f87171; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; line-height: 1.5; }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 16px 64px; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-weight: 600; }
+    .logo { width: 32px; height: 32px; border-radius: 8px; background: var(--brand); color: #fff; display: grid; place-items: center; font-size: 18px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgb(0 0 0 / .04); overflow: hidden; }
+    .head { padding: 20px 24px; border-bottom: 1px solid var(--line); }
+    h1 { margin: 0; font-size: 20px; font-weight: 600; }
+    .meta { margin-top: 4px; color: var(--muted); font-size: 14px; }
+    .badge { display: inline-block; margin-top: 10px; padding: 2px 10px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 12px; font-weight: 500; }
+    dl { margin: 0; }
+    .row { display: grid; grid-template-columns: 1fr; gap: 2px; padding: 14px 24px; border-bottom: 1px solid var(--line); }
+    .row:last-child { border-bottom: 0; }
+    @media (min-width: 560px) { .row { grid-template-columns: 220px 1fr; gap: 16px; } }
+    dt { color: var(--muted); font-size: 14px; font-weight: 500; }
+    dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .state { padding: 48px 24px; text-align: center; color: var(--muted); }
+    .state.error { color: var(--error); }
+    footer { margin-top: 20px; text-align: center; color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><span class="logo">✚</span> HospitalForm Demo</div>
+    <div class="card" id="card"><p class="state">Loading submission…</p></div>
+    <footer>Demo only: use dummy data. Anyone with this link can view it.</footer>
+  </main>
+
+  <script>
+    // Public values (the database only exposes a read-by-token function to this key).
+    const SUPABASE_URL = 'https://xpeanpkcggyzssienxwr.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_WRgqwQbpJsE9yjoEYmwJWg_7lDECSe8';
+
+    const card = document.getElementById('card');
+    const showState = (text, isError) => {
+      card.innerHTML = '';
+      const p = document.createElement('p');
+      p.className = 'state' + (isError ? ' error' : '');
+      p.textContent = text;
+      card.appendChild(p);
+    };
+
+    // Build elements with textContent (never innerHTML) so form answers can't inject HTML.
+    const el = (tag, className, text) => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    };
+
+    async function load() {
+      const token = new URLSearchParams(location.search).get('id');
+      if (!token || !/^[a-f0-9]{64}$/.test(token)) return showState('This link is missing or invalid.', true);
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_submission`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_token: token }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data) return showState('No submission found for this link.', true);
+
+        card.innerHTML = '';
+        const head = el('div', 'head');
+        head.append(
+          el('h1', '', data.form_title || 'Form submission'),
+          el('div', 'meta', 'Submitted ' + new Date(data.created_at).toLocaleString()),
+          el('span', 'badge', `${data.answers.length} answers`)
+        );
+        const list = el('dl');
+        for (const { question, answer } of data.answers) {
+          const row = el('div', 'row');
+          row.append(el('dt', '', question), el('dd', '', answer === '' ? '—' : answer));
+          list.append(row);
+        }
+        card.append(head, list);
+        document.title = data.form_title || 'Form Submission';
+      } catch (err) {
+        showState('Could not load this submission. Please try again.', true);
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

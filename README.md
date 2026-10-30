@@ -1,86 +1,47 @@
-# HospitalForm AI
+# Automation Form → Link Generation (demo)
 
-Google Form submissions → secure, access-controlled hospital dashboard.
+Fill in the Google Form → the answers are saved in Supabase → a unique link to view them
+appears in the response sheet.
 
-Every form response is sent by Google Apps Script to an Express API. The API validates it, ignores
-duplicates, encrypts patient fields, stores it in Supabase (PostgreSQL) and creates an expiring
-secure link. Staff log in to a React dashboard and see only their own hospitals' submissions.
+```
+Google Form ─► Google Sheet ─► Apps Script (on submit) ─► Supabase
+                    ▲                                        │
+                    └──────── "Link" column ◄── token ───────┘
+Link ─► index.html (GitHub Pages) ─► reads the answers from Supabase ─► shows them
+```
 
-> **Development uses dummy data only.** Never enter real patient information.
+> Demo only: anyone with a link can view that submission. Use dummy data.
 
-| Doc | What's in it |
+## Files
+
+| File | What it does |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System diagram, design decisions, phase plan |
-| [docs/phases/PHASE-1.md](docs/phases/PHASE-1.md) | Project setup, security middleware, glossary |
-| [docs/phases/PHASE-2.md](docs/phases/PHASE-2.md) | Supabase, tables, encryption, migrations |
-| [docs/phases/PHASE-3-TO-7.md](docs/phases/PHASE-3-TO-7.md) | APIs, secure links, roles, dashboard, testing |
-| [google-apps-script/README.md](google-apps-script/README.md) | Connecting a real Google Form |
+| `apps-script/Code.gs` | Runs on each form submit: sends the answers to Supabase, writes the link back to the sheet |
+| `index.html` | The page the link opens: shows the questions and answers |
+| `supabase/schema.sql` | The database table and two functions (already applied to the Supabase project) |
 
-## Requirements
+## Setup (one time)
 
-- Node.js 20+ (built and tested on Node 24)
-- A Supabase project (optional for local development: see `dev:local` below)
+1. **Turn on GitHub Pages:** in this repo on GitHub, go to **Settings → Pages**. Under *Build and
+   deployment*, choose **Deploy from a branch**, branch **main**, folder **/ (root)**, then **Save**.
+   After about a minute the page is live at https://vuday3336.github.io/Automation-Form-LinkGeneration/
+2. **Link the form to a sheet:** in your Google Form, open **Responses → Link to Sheets → Create**.
+3. **Add the script:** in that spreadsheet, open **Extensions → Apps Script**, replace everything with
+   `apps-script/Code.gs`, and click **Save**.
+4. **Turn on the automation:** in the function dropdown pick **`setupTrigger`**, click **Run**, then
+   **Review permissions → your account → Advanced → Go to project → Allow**.
 
-## First-time setup
+## Use it
 
-```bash
-cd backend
-npm install
-```
-```bash
-cd frontend
-npm install
-```
+Submit the form. Within a few seconds the response row gets a **Link** cell. Open it to see the answers.
 
-`backend/.env` holds all settings (copy `backend/.env.example` if it doesn't exist; generate each
-secret with `npm run secret`). To use Supabase, set `DATABASE_URL` to your project's **Session pooler**
-connection string (Supabase → Connect → Session pooler), then:
+- Responses submitted before step 4: run **`linkExistingRows`** once to give them links too.
+- Something went wrong: the Link cell shows `ERROR: …`, and **Executions** in the Apps Script
+  editor shows the full log.
 
-```bash
-cd backend
-npm run migrate
-```
-```bash
-cd backend
-npm run seed
-```
+## How it stays safe enough for a demo
 
-## Running locally (two terminals)
-
-Backend, either on Supabase:
-```bash
-cd backend
-npm run dev
-```
-or fully offline on a local Postgres with demo data (no Supabase needed):
-```bash
-cd backend
-npm run dev:local
-```
-
-Frontend (http://localhost:5173):
-```bash
-cd frontend
-npm run dev
-```
-
-Log in as `admin@hospitalform.test` with `SEED_ADMIN_PASSWORD` from `backend/.env`.
-Demo accounts for each role are listed in [PHASE-3-TO-7.md](docs/phases/PHASE-3-TO-7.md#demo-accounts-dummy-data).
-
-## Tests
-
-```bash
-cd backend
-npm test
-```
-
-## Project layout
-
-| Folder | What lives there |
-|---|---|
-| `backend/` | Express REST API: routes → middleware → controllers → services → models |
-| `backend/db/migrations/` | SQL that creates the database tables |
-| `frontend/` | React + Vite + Tailwind dashboard |
-| `google-apps-script/` | Code you paste into the Google Sheet's Apps Script editor |
-| `postman/` | Postman collection with every endpoint |
-| `docs/` | Architecture and phase-by-phase explanations |
+- The Supabase table is locked: the public key can only call `create_submission` (save answers and get a
+  token) and `get_submission` (read one submission by its token).
+- Tokens are 64 random hex characters, so links can't be guessed or listed.
+- Re-running the script for the same row returns the same link instead of creating a duplicate.

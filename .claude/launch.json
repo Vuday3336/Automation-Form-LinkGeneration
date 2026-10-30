@@ -2,22 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "backend",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "backend", "run", "dev"],
-      "port": 5000
-    },
-    {
-      "name": "backend-local",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "backend", "run", "dev:local"],
-      "port": 5000
-    },
-    {
-      "name": "frontend",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
-      "port": 5173
+      "name": "viewer",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-e", "require('http').createServer((q,s)=>{s.setHeader('Content-Type','text/html; charset=utf-8');s.end(require('fs').readFileSync('index.html'))}).listen(8080)"],
+      "port": 8080
     }
   ]
 }
